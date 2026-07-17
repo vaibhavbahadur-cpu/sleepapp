@@ -1,236 +1,244 @@
-<!DOCTYPE html> 
-<html lang="en"> 
-<head> 
-<meta charset="UTF-8"> 
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-<title>Smarter Sleep Engine Watch Simulator</title> 
-<style> 
-body { 
-    background-color: #0F0F1A; 
-    color: #ffffff; 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh; 
-    margin: 0; 
-    user-select: none; 
-} 
-.watch-bezel { 
-    width: 310px; 
-    height: 310px; 
-    background-color: #1A1A24; 
-    border: 12px solid #2A2A38; 
-    border-radius: 50%; 
-    box-shadow: 0 15px 40px rgba(0,0,0,0.6); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    position: relative; 
-} 
-.watch-screen { 
-    width: 260px; 
-    height: 260px; 
-    background-color: #000000; 
-    border-radius: 50%; 
-    overflow: hidden; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    text-align: center; 
-    padding: 24px; 
-    box-sizing: border-box; 
-} 
-.card-view { 
-    display: none; 
-    flex-direction: column; 
-    align-items: center; 
-    width: 100%; 
-    height: 100%; 
-    justify-content: center; 
-} 
-.card-view.active { 
-    display: flex; 
-} 
-.metric-title { 
-    font-size: 9px; 
-    font-weight: 700; 
-    letter-spacing: 1.2px; 
-    margin-bottom: 2px; 
-} 
-.metric-sub { 
-    font-size: 11px; 
-    color: #a1a1aa; 
-    font-weight: bold; 
-    margin-bottom: 4px; 
-} 
-canvas { 
-    background-color: #05050A; 
-    border: 1px solid #18181b; 
-    border-radius: 6px; 
-    margin: 4px 0; 
-} 
-.nav-btn { 
-    position: absolute; 
-    background: rgba(255, 255, 255, 0.2); 
-    border: none; 
-    color: white; 
-    font-size: 16px; 
-    width: 38px; 
-    height: 38px; 
-    cursor: pointer; 
-    border-radius: 50%; 
-    z-index: 200; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    transition: background 0.1s; 
-} 
-#prev-btn { 
-    left: 12px; 
-} 
-#next-btn { 
-    right: 12px; 
-} 
-.nav-btn:hover { 
-    background: rgba(255, 255, 255, 0.35); 
-} 
-.nav-btn:active { 
-    transform: scale(0.9); 
-} 
-</style> 
-</head> 
-<body> 
-<div style="font-size: 12px; color: #a1a1aa; margin-bottom: 16px; font-weight: 600;">⌚ GALAXY WATCH 8 CAROUSEL INTERACTIVE PREVIEW</div> 
-<div class="watch-bezel"> 
-    <button class="nav-btn" id="prev-btn" onclick="shiftCard(-1)">◀</button> 
-    <div class="watch-screen"> 
-        <!-- CARD 0: SLEEP STAGE STEP-GRAPH --> 
-        <div class="card-view active" id="card-0"> 
-            <div class="metric-title" style="color: #6366f1;">SLEEP STAGES ENGINE</div> 
-            <div class="metric-sub">Total: 7h 45m</div> 
-            <canvas id="sleepStageCanvas" width="160" height="75"></canvas> 
-            <div style="font-size: 8px; color: #71717a;">11PM ——— TIMELINE ——— 6AM</div> 
-        </div> 
-        <!-- CARD 1: HEART RATE GRAPH (CARDIO DESCENT) --> 
-        <div class="card-view" id="card-1"> 
-            <div class="metric-title" style="color: #ef4444;">HEART RATE LOGS</div> 
-            <div class="metric-sub" style="color: #fca5a5;">Plummet: 76 → 61 BPM</div> 
-            <canvas id="heartRateCanvas" width="160" height="75"></canvas> 
-        </div> 
-        <!-- CARD 2: BLOOD PRESSURE VARIANCE (mmHg) --> 
-        <div class="card-view" id="card-2"> 
-            <div class="metric-title" style="color: #2dd4bf;">BLOOD PRESSURE VARIANCE</div> 
-            <div class="metric-sub" style="color: #99f6e4;">Nocturnal Dipping Trend</div> 
-            <canvas id="bloodPressureCanvas" width="160" height="75"></canvas> 
-        </div> 
-        <!-- CARD 3: VASCULAR LOAD (ARTERIAL STIFFNESS) --> 
-        <div class="card-view" id="card-3"> 
-            <div class="metric-title" style="color: #22d3ee;">VASCULAR LOAD INDEX</div> 
-            <div class="metric-sub" style="color: #a5f3fc;">PTT Transit Delay Map</div> 
-            <canvas id="vascularLoadCanvas" width="160" height="75"></canvas> 
-        </div> 
-        <!-- CARD 4: THERMOSTAT-CALIBRATED SKIN TEMP --> 
-        <div class="card-view" id="card-4"> 
-            <div class="metric-title" style="color: #f97316;">SKIN TEMPERATURE CURVE</div> 
-            <div class="metric-sub" style="color: #ffedd5;">AC Set Point Adjusted</div> 
-            <canvas id="skinTempCanvas" width="160" height="75"></canvas> 
-        </div> 
-        <!-- CARD 5: ACCOUSTIC-CARDIO BLOOD OXYGEN (SpO2) --> 
-        <div class="card-view" id="card-5"> 
-            <div class="metric-title" style="color: #f472b6;">BLOOD OXYGEN SATURATION</div> 
-            <div class="metric-sub" style="color: #fce7f3;">SpO₂ Micro-Arousal Dips</div> 
-            <canvas id="spo2Canvas" width="160" height="75"></canvas> 
-        </div> 
-    </div> 
-    <button class="nav-btn" id="next-btn" onclick="shiftCard(1)">▶</button> 
-</div> 
-<script> 
-let currentCardIndex = 0; 
-const totalCards = 6; 
-function shiftCard(direction) { 
-    document.getElementById(`card-${currentCardIndex}`).classList.remove('active'); 
-    currentCardIndex = (currentCardIndex + direction + totalCards) % totalCards; 
-    document.getElementById(`card-${currentCardIndex}`).classList.add('active'); 
-} 
-window.onload = function() { 
-    // 1. Sleep Stage Painter (Step-Curve Graph Layout) 
-    const stageCtx = document.getElementById('sleepStageCanvas').getContext('2d'); 
-    stageCtx.strokeStyle = '#6366f1'; 
-    stageCtx.lineWidth = 2.5; 
-    stageCtx.beginPath(); 
-    const stages =; 
-    stages.forEach((y, i) => { 
-        let x = i * (160 / (stages.length - 1)); 
-        if (i === 0) stageCtx.moveTo(x, y); 
-        else { 
-            stageCtx.lineTo(x, stages[i-1]); 
-            stageCtx.lineTo(x, y); 
-        } 
-    }); 
-    stageCtx.stroke(); 
-    // 2. Heart Rate Painter (Wave Curve Layout) 
-    const hrCtx = document.getElementById('heartRateCanvas').getContext('2d'); 
-    hrCtx.strokeStyle = '#ef4444'; 
-    hrCtx.lineWidth = 2; 
-    hrCtx.beginPath(); 
-    const hrPoints =; 
-    hrPoints.forEach((y, i) => { 
-        let x = i * (160 / (hrPoints.length - 1)); 
-        if (i === 0) hrCtx.moveTo(x, y); 
-        else hrCtx.lineTo(x, y); 
-    }); 
-    hrCtx.stroke(); 
-    // 3. Blood Pressure Painter (Shift Trend Layout) 
-    const bpCtx = document.getElementById('bloodPressureCanvas').getContext('2d'); 
-    bpCtx.strokeStyle = '#2dd4bf'; 
-    bpCtx.lineWidth = 2; 
-    bpCtx.beginPath(); 
-    const bpPoints =; 
-    bpPoints.forEach((y, i) => { 
-        let x = i * (160 / (bpPoints.length - 1)); 
-        if (i === 0) bpCtx.moveTo(x, y); 
-        else bpCtx.lineTo(x, y); 
-    }); 
-    bpCtx.stroke(); 
-    // 4. Vascular Load Painter (Transit Timing Layout) 
-    const vCtx = document.getElementById('vascularLoadCanvas').getContext('2d'); 
-    vCtx.strokeStyle = '#22d3ee'; 
-    vCtx.lineWidth = 2; 
-    vCtx.beginPath(); 
-    const vPoints =; 
-    vPoints.forEach((y, i) => { 
-        let x = i * (160 / (vPoints.length - 1)); 
-        if (i === 0) vCtx.moveTo(x, y); 
-        else vCtx.lineTo(x, y); 
-    }); 
-    vCtx.stroke(); 
-    // 5. Skin Temperature Painter (Thermostat Calibrated Layout) 
-    const tCtx = document.getElementById('skinTempCanvas').getContext('2d'); 
-    tCtx.strokeStyle = '#f97316'; 
-    tCtx.lineWidth = 2; 
-    tCtx.beginPath(); 
-    const tPoints =; 
-    tPoints.forEach((y, i) => { 
-        let x = i * (160 / (tPoints.length - 1)); 
-        if (i === 0) tCtx.moveTo(x, y); 
-        else tCtx.lineTo(x, y); 
-    }); 
-    vCtx.stroke(); // 6. Blood Oxygen SpO2 Painter (Micro-Deduction Drops Layout) 
-    const oCtx = document.getElementById('spo2Canvas').getContext('2d'); 
-    oCtx.strokeStyle = '#f472b6'; 
-    oCtx.lineWidth = 2; 
-    oCtx.beginPath(); 
-    const oPoints =; 
-    oPoints.forEach((y, i) => { 
-        let x = i * (160 / (oPoints.length - 1)); 
-        if (i === 0) oCtx.moveTo(x, y); 
-        else oCtx.lineTo(x, y); 
-    }); 
-    oCtx.stroke(); 
-}; 
-</script> 
-</body> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smarter Sleep Engine Watch Simulator</title>
+<style>
+body {
+    background-color: #0F0F1A;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    user-select: none;
+}
+.watch-bezel {
+    width: 310px;
+    height: 310px;
+    background-color: #1A1A24;
+    border: 12px solid #2A2A38;
+    border-radius: 50%;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+.watch-screen {
+    width: 260px;
+    height: 260px;
+    background-color: #000000;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    box-sizing: border-box;
+}
+.card-view {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+}
+.card-view.active {
+    display: flex;
+}
+.metric-title {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    margin-bottom: 2px;
+}
+.metric-sub {
+    font-size: 11px;
+    color: #a1a1aa;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+canvas {
+    background-color: #05050A;
+    border: 1px solid #18181b;
+    border-radius: 6px;
+    margin: 4px 0;
+}
+.nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 16px;
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    border-radius: 50%;
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.1s;
+}
+#prev-btn {
+    left: 12px;
+}
+#next-btn {
+    right: 12px;
+}
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+.nav-btn:active {
+    transform: translateY(-50%) scale(0.9);
+}
+</style>
+</head>
+<body>
+<div style="font-size: 12px; color: #a1a1aa; margin-bottom: 16px; font-weight: 600;">⌚ GALAXY WATCH 8 CAROUSEL INTERACTIVE PREVIEW</div>
+<div class="watch-bezel">
+    <button class="nav-btn" id="prev-btn" onclick="shiftCard(-1)">◀</button>
+    <div class="watch-screen">
+        <!-- CARD 0: SLEEP STAGE STEP-GRAPH -->
+        <div class="card-view active" id="card-0">
+            <div class="metric-title" style="color: #6366f1;">SLEEP STAGES ENGINE</div>
+            <div class="metric-sub">Total: 7h 45m</div>
+            <canvas id="sleepStageCanvas" width="160" height="75"></canvas>
+            <div style="font-size: 8px; color: #71717a;">11PM ——— TIMELINE ——— 6AM</div>
+        </div>
+        <!-- CARD 1: HEART RATE GRAPH (CARDIO DESCENT) -->
+        <div class="card-view" id="card-1">
+            <div class="metric-title" style="color: #ef4444;">HEART RATE LOGS</div>
+            <div class="metric-sub" style="color: #fca5a5;">Plummet: 76 → 61 BPM</div>
+            <canvas id="heartRateCanvas" width="160" height="75"></canvas>
+        </div>
+        <!-- CARD 2: BLOOD PRESSURE VARIANCE (mmHg) -->
+        <div class="card-view" id="card-2">
+            <div class="metric-title" style="color: #2dd4bf;">BLOOD PRESSURE VARIANCE</div>
+            <div class="metric-sub" style="color: #99f6e4;">Nocturnal Dipping Trend</div>
+            <canvas id="bloodPressureCanvas" width="160" height="75"></canvas>
+        </div>
+        <!-- CARD 3: VASCULAR LOAD (ARTERIAL STIFFNESS) -->
+        <div class="card-view" id="card-3">
+            <div class="metric-title" style="color: #22d3ee;">VASCULAR LOAD INDEX</div>
+            <div class="metric-sub" style="color: #a5f3fc;">PTT Transit Delay Map</div>
+            <canvas id="vascularLoadCanvas" width="160" height="75"></canvas>
+        </div>
+        <!-- CARD 4: THERMOSTAT-CALIBRATED SKIN TEMP -->
+        <div class="card-view" id="card-4">
+            <div class="metric-title" style="color: #f97316;">SKIN TEMPERATURE CURVE</div>
+            <div class="metric-sub" style="color: #ffedd5;">AC Set Point Adjusted</div>
+            <canvas id="skinTempCanvas" width="160" height="75"></canvas>
+        </div>
+        <!-- CARD 5: ACCOUSTIC-CARDIO BLOOD OXYGEN (SpO2) -->
+        <div class="card-view" id="card-5">
+            <div class="metric-title" style="color: #f472b6;">BLOOD OXYGEN SATURATION</div>
+            <div class="metric-sub" style="color: #fce7f3;">SpO₂ Micro-Arousal Dips</div>
+            <canvas id="spo2Canvas" width="160" height="75"></canvas>
+        </div>
+    </div>
+    <button class="nav-btn" id="next-btn" onclick="shiftCard(1)">▶</button>
+</div>
+<script>
+let currentCardIndex = 0;
+const totalCards = 6;
+function shiftCard(direction) {
+    document.getElementById(`card-${currentCardIndex}`).classList.remove('active');
+    currentCardIndex = (currentCardIndex + direction + totalCards) % totalCards;
+    document.getElementById(`card-${currentCardIndex}`).classList.add('active');
+}
+window.onload = function() {
+    // 1. Sleep Stage Painter (Step-Curve Graph Layout)
+    const stageCtx = document.getElementById('sleepStageCanvas').getContext('2d');
+    stageCtx.strokeStyle = '#6366f1';
+    stageCtx.lineWidth = 2.5;
+    stageCtx.beginPath();
+    const stages = [8, 45, 45, 65, 65, 45, 25, 25, 45, 65, 65, 45, 25, 8];
+    stages.forEach((y, i) => {
+        let x = i * (160 / (stages.length - 1));
+        if (i === 0) stageCtx.moveTo(x, y);
+        else {
+            stageCtx.lineTo(x, stages[i-1]);
+            stageCtx.lineTo(x, y);
+        }
+    });
+    stageCtx.stroke();
+
+    // 2. Heart Rate Painter (Wave Curve Layout)
+    const hrCtx = document.getElementById('heartRateCanvas').getContext('2d');
+    hrCtx.strokeStyle = '#ef4444';
+    hrCtx.lineWidth = 2;
+    hrCtx.beginPath();
+    const hrPoints = [10, 14, 12, 22, 20, 30, 28, 40, 38, 50, 48, 58, 55, 62];
+    hrPoints.forEach((y, i) => {
+        let x = i * (160 / (hrPoints.length - 1));
+        if (i === 0) hrCtx.moveTo(x, y);
+        else hrCtx.lineTo(x, y);
+    });
+    hrCtx.stroke();
+
+    // 3. Blood Pressure Painter (Shift Trend Layout)
+    const bpCtx = document.getElementById('bloodPressureCanvas').getContext('2d');
+    bpCtx.strokeStyle = '#2dd4bf';
+    bpCtx.lineWidth = 2;
+    bpCtx.beginPath();
+    const bpPoints = [18, 20, 24, 22, 30, 34, 32, 40, 44, 42, 50, 54, 52, 58];
+    bpPoints.forEach((y, i) => {
+        let x = i * (160 / (bpPoints.length - 1));
+        if (i === 0) bpCtx.moveTo(x, y);
+        else bpCtx.lineTo(x, y);
+    });
+    bpCtx.stroke();
+
+    // 4. Vascular Load Painter (Transit Timing Layout)
+    const vCtx = document.getElementById('vascularLoadCanvas').getContext('2d');
+    vCtx.strokeStyle = '#22d3ee';
+    vCtx.lineWidth = 2;
+    vCtx.beginPath();
+    const vPoints = [35, 20, 45, 15, 50, 25, 40, 18, 48, 22, 42, 16, 46, 30];
+    vPoints.forEach((y, i) => {
+        let x = i * (160 / (vPoints.length - 1));
+        if (i === 0) vCtx.moveTo(x, y);
+        else vCtx.lineTo(x, y);
+    });
+    vCtx.stroke();
+
+    // 5. Skin Temperature Painter (Thermostat Calibrated Layout)
+    const tCtx = document.getElementById('skinTempCanvas').getContext('2d');
+    tCtx.strokeStyle = '#f97316';
+    tCtx.lineWidth = 2;
+    tCtx.beginPath();
+    const tPoints = [45, 42, 38, 35, 30, 28, 26, 25, 24, 25, 24, 25, 24, 25];
+    tPoints.forEach((y, i) => {
+        let x = i * (160 / (tPoints.length - 1));
+        if (i === 0) tCtx.moveTo(x, y);
+        else tCtx.lineTo(x, y);
+    });
+    tCtx.stroke();
+
+    // 6. Blood Oxygen SpO2 Painter (Micro-Arousal Dips Layout)
+    const oCtx = document.getElementById('spo2Canvas').getContext('2d');
+    oCtx.strokeStyle = '#f472b6';
+    oCtx.lineWidth = 2;
+    oCtx.beginPath();
+    const oPoints = [10, 10, 12, 10, 30, 10, 10, 12, 35, 10, 10, 10, 28, 10];
+    oPoints.forEach((y, i) => {
+        let x = i * (160 / (oPoints.length - 1));
+        if (i === 0) oCtx.moveTo(x, y);
+        else oCtx.lineTo(x, y);
+    });
+    oCtx.stroke();
+};
+</script>
+</body>
 </html>
