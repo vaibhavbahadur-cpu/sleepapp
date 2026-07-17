@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'sleep_staging_engine.dart'; // Ensure this matches your project structure
+import 'dart:convert';
+import 'dart:js' as js; 
+import 'sleep_staging_engine.dart';
 
 /// Individual data point representing a timed epoch measurement
 class SleepEpochData {
@@ -17,6 +19,17 @@ class GalaxyWatchTimelineGraph extends StatelessWidget {
   /// Factory helper: pass your SleepStagingEngine history list here directly
   static List<SleepEpochData> fromSnapshotHistory(List<SleepStageSnapshot> history) {
     return history.map((s) => SleepEpochData(timestamp: s.timestamp, stage: s.stage)).toList();
+  }
+
+  /// NEW: THIS SENDS THE SLEEP DATA TO YOUR HTML DASHBOARD
+  void sendSleepDataToDashboard() {
+    List<Map<String, dynamic>> jsonList = overnightTimeline.map((data) => {
+      "time": data.timestamp.toIso8601String(),
+      "stage": data.stage.toString().split('.').last, // e.g., "deep", "rem"
+    }).toList();
+    
+    String jsonString = jsonEncode(jsonList);
+    js.context.callMethod('updateSleepGraphs', [jsonString]);
   }
 
   int _calculateTotalSleepMinutes() {
@@ -104,8 +117,8 @@ class SleepTimelineStepPainter extends CustomPainter {
       double currentY = getStageHeightY(timeline[i].stage);
       double nextY = getStageHeightY(timeline[i + 1].stage);
 
-      path.lineTo(nextX, currentY); // Horizontal hold
-      path.lineTo(nextX, nextY);    // Vertical drop/climb
+      path.lineTo(nextX, currentY); 
+      path.lineTo(nextX, nextY);    
     }
 
     canvas.drawPath(path, paintLine);
