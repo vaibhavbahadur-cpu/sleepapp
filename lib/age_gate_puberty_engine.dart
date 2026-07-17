@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:js' as js; 
 
 class AgeGatePubertyEngine {
   final int selectedAgeProfile;
@@ -12,7 +13,7 @@ class AgeGatePubertyEngine {
     return (selectedAgeProfile >= 11 && selectedAgeProfile <= 17);
   }
 
-  // I've simplified the inputs. It calculates the trend AND saves it.
+  // Calculates the trend and saves it automatically.
   void evaluateAndSaveMilestones({
     required int currentBpm,
     required int baseBpm,
@@ -42,7 +43,14 @@ class AgeGatePubertyEngine {
     });
   }
 
-  // Call this to get the JSON string for your index.html
+  /// NEW: THIS SENDS THE PUBERTY DATA TO YOUR HTML DASHBOARD
+  void sendPubertyDataToDashboard() {
+    String jsonString = jsonEncode(_savedReports);
+    // Fires the data to a JS function named 'updatePubertyGraphs' in your index.html
+    js.context.callMethod('updatePubertyGraphs', [jsonString]);
+  }
+
+  // Call this if you just need the JSON string for other logic
   String getJsonForWeb() {
     return jsonEncode(_savedReports);
   }
