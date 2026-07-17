@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'sleep_staging_engine.dart';
+import 'sleep_staging_engine.dart'; // Ensure this matches your project structure
 
 /// Individual data point representing a timed epoch measurement
 class SleepEpochData {
@@ -14,11 +14,14 @@ class GalaxyWatchTimelineGraph extends StatelessWidget {
 
   const GalaxyWatchTimelineGraph({super.key, required this.overnightTimeline});
 
-  // Helper method to calculate the total duration slept (excluding awake windows)
+  /// Factory helper: pass your SleepStagingEngine history list here directly
+  static List<SleepEpochData> fromSnapshotHistory(List<SleepStageSnapshot> history) {
+    return history.map((s) => SleepEpochData(timestamp: s.timestamp, stage: s.stage)).toList();
+  }
+
   int _calculateTotalSleepMinutes() {
     if (overnightTimeline.length < 2) return 0;
     int totalMinutes = 0;
-
     for (int i = 0; i < overnightTimeline.length - 1; i++) {
       if (overnightTimeline[i].stage != CalculatedSleepStage.awake) {
         totalMinutes += overnightTimeline[i + 1].timestamp.difference(overnightTimeline[i].timestamp).inMinutes;
@@ -30,33 +33,26 @@ class GalaxyWatchTimelineGraph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int totalSleepMins = _calculateTotalSleepMinutes();
-    int hours = totalSleepMins ~/ 60;
-    int mins = totalSleepMins % 60;
-
+    
     return Scaffold(
-      backgroundColor: Colors.black, // Crucial: Saves AMOLED battery on Galaxy Watch 8
+      backgroundColor: Colors.black,
       body: Center(
-        child: Container(
-          // Lock layout dimensions strictly to prevent clipping on the circular Watch 8 bezel
+        child: SizedBox(
           width: 220,
           height: 220,
-          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 1. DURATION READOUT HEADER
               Text(
-                "TOTAL SLEEP: ${hours}h ${mins}m",
-                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.black, letterSpacing: 0.5),
+                "TOTAL SLEEP: ${totalSleepMins ~/ 60}h ${totalSleepMins % 60}m",
+                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
-
-              // 2. TIMELINE CANVAS CONTAINER
               Expanded(
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.white10, width: 1),
+                    border: Border.all(color: Colors.white10),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: CustomPaint(
@@ -64,20 +60,6 @@ class GalaxyWatchTimelineGraph extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
-
-              // 3. HORIZONTAL TIMELINE FOOTER LABELS
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("11PM", style: TextStyle(color: Colors.white38, fontSize: 8)),
-                    Text("2AM", style: TextStyle(color: Colors.white38, fontSize: 8)),
-                    Text("6AM", style: TextStyle(color: Colors.white38, fontSize: 8)),
-                  ],
-                ),
-              )
             ],
           ),
         ),
@@ -98,48 +80,32 @@ class SleepTimelineStepPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (timeline.length < 2) return;
 
-    // Configure drawing grid line styling
     final paintLine = Paint()
       ..color = Colors.indigoAccent
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.square;
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
 
     final path = Path();
-    
-    // Establish horizontal timeline layout increments
     double stepX = size.width / (timeline.length - 1);
-    
-    // Map vertical sleep stage levels (Clamped limits inside container height)
+
     double getStageHeightY(CalculatedSleepStage stage) {
       switch (stage) {
-        case CalculatedSleepStage.awake:
-          return size.height * 0.15; // Awake sits high up at top
-        case CalculatedSleepStage.rem:
-          return size.height * 0.40; // REM sits right below awake
-        case CalculatedSleepStage.light:
-          return size.height * 0.65; // Light sleep sits in mid-lower lane
-        case CalculatedSleepStage.deep:
-          return size.height * 0.90; // Deep sleep rests safely at the very bottom
+        case CalculatedSleepStage.awake: return size.height * 0.15;
+        case CalculatedSleepStage.rem: return size.height * 0.40;
+        case CalculatedSleepStage.light: return size.height * 0.65;
+        case CalculatedSleepStage.deep: return size.height * 0.90;
       }
     }
 
-    // Begin path drawing sequence at the initial sleep epoch coordinate block
-    double startX = 0;
-    double startY = getStageHeightY(timeline[0].stage);
-    path.moveTo(startX, startY);
+    path.moveTo(0, getStageHeightY(timeline[0].stage));
 
     for (int i = 0; i < timeline.length - 1; i++) {
-      double currentX = i * stepX;
       double nextX = (i + 1) * stepX;
-      
       double currentY = getStageHeightY(timeline[i].stage);
       double nextY = getStageHeightY(timeline[i + 1].stage);
 
-      // CRUCIAL Sleep Science Drawing Logic: Create square step curves 
-      // instead of standard angled diagonal lines to map accurate time boundaries
-      path.lineTo(nextX, currentY); // Maintain resting level line horizontally until next timestamp check
-      path.lineTo(nextX, nextY);    // Drop or climb vertically instantly at the execution point
+      path.lineTo(nextX, currentY); // Horizontal hold
+      path.lineTo(nextX, nextY);    // Vertical drop/climb
     }
 
     canvas.drawPath(path, paintLine);
